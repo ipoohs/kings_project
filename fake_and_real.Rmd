@@ -1,0 +1,621 @@
+---
+title: "Project-based master's Dissertation"
+author: "Fuangrit Srinual"
+date: '2022-07-01'
+output: word_document
+---
+
+
+Research question - To what extent are fake and real news differ in terms of text analysis? 
+
+
+```{r}
+fake <- read.csv("~/Documents/2021KCLsem2/Dissertation/fakenewsdata/Fake.csv")
+true <- read.csv("~/Documents/2021KCLsem2/Dissertation/fakenewsdata/True.csv")
+```
+
+
+```{r}
+library(syuzhet)
+library(textdata)
+library(tidytext)
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+library(NLP)
+library(tm)
+library(wordcloud)
+library(RColorBrewer)
+library(ggplot2)
+library(gofastr)
+library(dplyr)
+library(tidytext)
+library(topicdoc)
+library(topicmodels)
+library(tidyr)
+library(stringr)
+library(textstem)
+```
+
+
+```{r}
+dim(fake)
+dim(true)
+```
+
+
+```{r}
+fake_token = data.frame(text=fake$text, stringsAsFactors = FALSE) %>% unnest_tokens(word, text)
+fake_senti = inner_join(fake_token, get_sentiments("nrc")) %>%
+  dplyr::count(sentiment)
+fake_senti$percent = (fake_senti$n/sum(fake_senti$n))*100
+fake_senti_plot <- ggplot(fake_senti, aes(sentiment, percent)) +   
+        geom_bar(aes(fill = sentiment), position = 'dodge', stat = 'identity')+ 
+  coord_flip() +
+        theme(legend.position = 'none', plot.title = element_text(size=18, face = 'bold'),
+              axis.text=element_text(size=16),
+              axis.title=element_text(size=14,face="bold"))
+
+
+
+true_token = data.frame(text=true$text, stringsAsFactors = FALSE) %>% unnest_tokens(word, text)
+true_senti = inner_join(true_token, get_sentiments("nrc")) %>%
+  count(sentiment)
+true_senti$percent = (true_senti$n/sum(true_senti$n))*100
+true_senti_plot <- ggplot(true_senti, aes(sentiment, percent)) +   
+        geom_bar(aes(fill = sentiment), position = 'dodge', stat = 'identity')+
+  coord_flip() +
+        theme(legend.position = 'none', plot.title = element_text(size=18),
+              axis.text=element_text(size=16),
+              axis.title=element_text(size=14,face="bold"))
+
+
+ggarrange(fake_senti_plot, true_senti_plot, 
+          labels = c("Fake", "True"),
+          ncol = 2, nrow = 1)
+```
+
+
+
+Another approach for a sentiment analysis
+
+
+```{r}
+df_ld_sentiments = get_nrc_sentiment(fake$text)
+fake$sentiment = df_ld_sentiments$positive-df_ld_sentiments$negative
+```
+
+6. Plot a histogramt of the sentiment across all the texts. What is the average sentiment across all the texts?
+
+Histogram:
+
+```{r}
+hist(fake$sentiment)
+```
+
+```{r}
+mean(fake$sentiment)
+```
+
+
+```{r}
+fake_senti_bing = inner_join(fake_token, get_sentiments("bing")) %>%
+  dplyr::count(sentiment)
+fake_senti_bing$percent = (fake_senti_bing$n/sum(fake_senti_bing$n))*100
+fake_senti_bing_plot <- ggplot(fake_senti_bing, aes(sentiment, percent)) +   
+        geom_bar(aes(fill = sentiment), position = 'dodge', stat = 'identity')+ 
+  coord_flip() +
+        theme(legend.position = 'none', plot.title = element_text(size=18, face = 'bold'),
+              axis.text=element_text(size=16),
+              axis.title=element_text(size=14,face="bold"))
+
+
+
+true_senti_bing = inner_join(true_token, get_sentiments("bing")) %>%
+  count(sentiment)
+true_senti_bing$percent = (true_senti_bing$n/sum(true_senti_bing$n))*100
+true_senti_bing_plot <- ggplot(true_senti_bing, aes(sentiment, percent)) +   
+        geom_bar(aes(fill = sentiment), position = 'dodge', stat = 'identity')+
+  coord_flip() +
+        theme(legend.position = 'none', plot.title = element_text(size=18),
+              axis.text=element_text(size=16),
+              axis.title=element_text(size=14,face="bold"))
+
+
+ggarrange(fake_senti_bing_plot, true_senti_bing_plot, 
+          labels = c("Fake", "True"),
+          ncol = 2, nrow = 1)
+```
+
+
+```{r}
+fake_senti_bing$percent
+true_senti_bing$percent
+```
+
+
+
+```{r}
+fake_senti_afinn = inner_join(fake_token, get_sentiments("afinn")) %>%
+  dplyr::count(value)
+fake_senti_afinn$percent = (fake_senti_afinn$n/sum(fake_senti_afinn$n))*100
+fake_senti_afinn_plot <- ggplot(fake_senti_afinn, aes(value, percent)) +   
+        geom_bar(aes(fill = value), position = 'dodge', stat = 'identity')+ 
+  coord_flip() +
+        theme(legend.position = 'none', plot.title = element_text(size=18, face = 'bold'),
+              axis.text=element_text(size=16),
+              axis.title=element_text(size=14,face="bold"))
+
+
+true_senti_afinn = inner_join(true_token, get_sentiments("afinn")) %>%
+  dplyr::count(value)
+true_senti_afinn$percent = (true_senti_afinn$n/sum(true_senti_afinn$n))*100
+true_senti_afinn_plot <- ggplot(true_senti_afinn, aes(value, percent)) +   
+        geom_bar(aes(fill = value), position = 'dodge', stat = 'identity')+
+  coord_flip() +
+        theme(legend.position = 'none', plot.title = element_text(size=18),
+              axis.text=element_text(size=16),
+              axis.title=element_text(size=14,face="bold"))
+
+
+ggarrange(fake_senti_afinn_plot, true_senti_afinn_plot, 
+          labels = c("Fake", "True"),
+          ncol = 2, nrow = 1)
+```
+
+
+```{r}
+fake_senti_loughran = inner_join(fake_token, get_sentiments("loughran")) %>% dplyr::count(sentiment)
+fake_senti_loughran$percent = (fake_senti_loughran$n/sum(fake_senti_loughran$n))*100
+fake_senti_loughran_plot <- ggplot(fake_senti_loughran, aes(sentiment, percent)) +   
+        geom_bar(aes(fill = sentiment), position = 'dodge', stat = 'identity')+ 
+  coord_flip() +
+        theme(legend.position = 'none', plot.title = element_text(size=18, face = 'bold'),
+              axis.text=element_text(size=16),
+              axis.title=element_text(size=14,face="bold"))
+
+
+true_senti_loughran = inner_join(true_token, get_sentiments("loughran")) %>%
+  dplyr::count(sentiment)
+true_senti_loughran$percent = (true_senti_loughran$n/sum(true_senti_loughran$n))*100
+true_senti_loughran_plot <- ggplot(true_senti_loughran, aes(sentiment, percent)) +   
+        geom_bar(aes(fill = sentiment), position = 'dodge', stat = 'identity')+
+  coord_flip() +
+        theme(legend.position = 'none', plot.title = element_text(size=18),
+              axis.text=element_text(size=16),
+              axis.title=element_text(size=14,face="bold"))
+
+
+ggarrange(fake_senti_loughran_plot, true_senti_loughran_plot, 
+          labels = c("Fake", "True"),
+          ncol = 2, nrow = 1)
+```
+
+
+Data cleaning
+
+
+```{r}
+fake$cleaned_text <- tolower(fake$text)# Lowercase
+fake$cleaned_text <- lemmatize_strings(fake$cleaned_text) #Lemmatization
+fake$cleaned_text <- gsub("[[:punct:]]", "", fake$cleaned_text) # Remove punctuation
+fake$cleaned_text <- gsub("[[:digit:]]", "", fake$cleaned_text) # Remove numbers
+fake$cleaned_text <- gsub("\\s+", " ", str_trim(fake$cleaned_text))
+fake$cleaned_text <- removeWords(fake$cleaned_text, stopwords("en"))
+```
+
+
+```{r}
+all_stops <- c("just", "might", "ll", "t", "ve","said", "will","can", "also","get", "like", "say", "s",stopwords("en"))
+
+fake$cleaned_text <- removeWords(fake$cleaned_text, all_stops)
+```
+
+
+```{r}
+true$cleaned_text <- tolower(true$text) # Lowercase
+true$cleaned_text <- lemmatize_strings(true$cleaned_text) #Lemmatization
+true$cleaned_text <- gsub("[[:punct:]]", "", true$cleaned_text) # Remove punctuation
+true$cleaned_text <- gsub("[[:digit:]]", "", true$cleaned_text) # Remove numbers
+true$cleaned_text <- gsub("\\s+", " ", str_trim(true$cleaned_text))
+true$cleaned_text <- removeWords(true$cleaned_text, all_stops)
+
+```
+
+
+```{r}
+data_cleaning <- function(c) {
+  c <- Corpus(VectorSource(c$cleaned_text))                 
+    removeURL <- function(x) gsub('http[[:alnum:]]*','', x)
+  c<- tm_map(c, content_transformer(removeURL))
+  c <- tm_map(c, stripWhitespace)
+  c <- tm_map(c, content_transformer(function(s)
+  {
+    gsub(pattern = '[^a-zA-Z0-9\\s]+',
+    x = s,
+    replacement = " " ,
+     ignore.case = TRUE,
+    perl = TRUE)
+  } ))
+    removeNonAscii <- function(x) textclean::replace_non_ascii(x)
+  c <- tm_map(c, content_transformer(removeNonAscii))
+  return(c)
+  }
+```
+
+
+```{r}
+fake_text_clean <- data_cleaning(fake)
+true_text_clean <- data_cleaning(true)
+```
+
+
+Word frequency
+
+
+```{r}
+set.seed(555)
+palet <- brewer.pal(8, 'Dark2')
+wordcloud(fake_text_clean, min.freq = 2000, scale = c(4.5, 0.3) , random.order = F, col = palet)
+```
+
+
+```{r}
+set.seed(555)
+palet <- brewer.pal(8, 'Dark2')
+wordcloud(true_text_clean, min.freq = 2000, scale = c(4.5, 0.3) , random.order = F, col = palet)
+```
+
+
+```{r}
+fake_dtm <- DocumentTermMatrix(fake_text_clean, control = list(stopwords = TRUE, removePunctuation = TRUE, stemming = TRUE, removeNumbers = TRUE))
+true_dtm <- DocumentTermMatrix(true_text_clean, control = list(stopwords = TRUE, removePunctuation = TRUE, stemming = TRUE, removeNumbers = TRUE))
+```
+
+
+```{r}
+fake_doc.length <- apply(fake_dtm, 1, sum)
+fake_dtm_frequency <- colSums(as.matrix(fake_dtm))
+fake_dtm <- fake_dtm[fake_doc.length > 0,]
+fake_dtm
+```
+
+
+```{r}
+true_doc.length <- apply(true_dtm, 1, sum)
+true_dtm_frequency <- colSums(as.matrix(true_dtm))
+true_dtm <- true_dtm[true_doc.length > 0,]
+true_dtm
+```
+
+
+```{r}
+fake_dtm_order <- order(fake_dtm_frequency, decreasing = TRUE)
+fake_order <- fake_dtm_frequency[head(fake_dtm_order, n = 20)]
+fake_order
+
+findAssocs(fake_dtm, "trump",0.2)
+findAssocs(fake_dtm, 'said', 0.2)
+findAssocs(fake_dtm, 'presid', 0.2)
+findAssocs(fake_dtm, 'peopl', 0.2)
+findAssocs(fake_dtm, 'will', 0.2)
+```
+
+
+```{r}
+true_dtm_order <- order(true_dtm_frequency, decreasing = TRUE)
+true_order <- true_dtm_frequency[head(true_dtm_order, n = 20)]
+true_order
+
+findAssocs(true_dtm, "trump",0.2)
+findAssocs(true_dtm, 'said', 0.2)
+findAssocs(true_dtm, 'presid', 0.2)
+findAssocs(true_dtm, 'peopl', 0.2)
+findAssocs(true_dtm, 'will', 0.2)
+```
+
+
+Topic modelling
+
+
+
+```{r}
+library(tm)
+df_ld1 = data.frame(matrix(nrow = nrow(fake), ncol = 2), stringsAsFactors = FALSE)
+colnames(df_ld1) = c("doc_id", "text")
+df_ld1$doc_id  = 1:nrow(fake)
+df_ld1$text  = fake$cleaned_text
+```
+
+
+
+```{r}
+ld_corpus = Corpus(DataframeSource(df_ld1))
+class(ld_corpus)
+```
+
+
+```{r}
+fake_dtm = DocumentTermMatrix(ld_corpus, control = list(stopwords = TRUE, removePunctuation = TRUE, stemming = TRUE, removeNumbers = TRUE, bounds = list(global = c(2,Inf))))
+inspect(fake_dtm)
+dim(fake_dtm)
+```
+
+
+```{r}
+library(slam)
+fake_sel_idx = row_sums(fake_dtm) > 0
+sum(fake_sel_idx)
+fake_dtm = fake_dtm[fake_sel_idx, ]
+dim(fake_dtm)
+```
+
+
+```{r}
+library(slam)
+true_sel_idx = row_sums(true_dtm) > 0
+sum(true_sel_idx)
+true_dtm = true_dtm[true_sel_idx, ]
+dim(true_dtm)
+```
+
+
+```{r}
+fake_result <- ldatuning::FindTopicsNumber(
+  fake_dtm,
+  topics = seq(from = 2, to = 450, by = 1),
+  metrics = c("CaoJuan2009",  "Deveaud2014","Arun2010", "Griffiths2004"),
+  method = "Gibbs",
+  control = list(seed = 38),
+  verbose = TRUE
+)
+```
+
+
+```{r}
+library(ldatuning)
+FindTopicsNumber_plot(fake_result)
+```
+
+
+```{r}
+fake_k_best = 2
+fake_lda_best = LDA(fake_dtm, fake_k_best, control = list(verbose = 25))
+```
+
+
+```{r}
+data.frame(terms(fake_lda_best, 10))
+```
+
+
+Topic modelling for real news
+
+
+```{r}
+true_result <- ldatuning::FindTopicsNumber(
+  true_dtm,
+  topics = seq(from = 2, to = 450, by = 1),
+  metrics = c("CaoJuan2009",  "Deveaud2014","Arun2010", "Griffiths2004"),
+  method = "Gibbs",
+  control = list(seed = 168),
+  verbose = TRUE
+)
+```
+
+
+```{r}
+library(ldatuning)
+FindTopicsNumber_plot(true_result)
+```
+
+
+```{r}
+true_k_best = 2
+true_lda_best = LDA(true_dtm, true_k_best, control = list(verbose = 25))
+```
+
+
+```{r}
+data.frame(terms(true_lda_best, 10))
+```
+
+
+Frequent terms in both
+
+
+```{r}
+fake_freq_terms <- findFreqTerms(fake_dtm,100)
+fake_dtm_1 <- fake_dtm[,fake_freq_terms]
+rownum_fake <- apply(fake_dtm_1,1,sum)
+fake_dtm_1 <- fake_dtm_1[rownum_fake>0,]
+```
+
+
+```{r}
+fake_lda <- LDA(fake_dtm_1, k = 5, control = list(seed = 1234))
+topic_fake_lda <- tidy(fake_lda, matrix = "beta")
+
+top_topic_fake <- topic_fake_lda %>%
+  group_by(topic) %>%
+  top_n(20,beta) %>%
+  ungroup() %>%
+  arrange(topic,-beta)
+
+plot_topic_fake <- top_topic_fake %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) + 
+  geom_col(show.legend = FALSE) + 
+  ggtitle("Terms in Fake News") +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip() +
+  scale_x_reordered()
+
+plot_topic_fake
+```
+
+
+```{r}
+true_freq_terms <- findFreqTerms(true_dtm,100)
+true_dtm_1 <- true_dtm[,true_freq_terms]
+rownum_true <- apply(true_dtm_1,1,sum)
+true_dtm_1 <- true_dtm_1[rownum_true>0,]
+```
+
+
+```{r}
+true_lda <- LDA(true_dtm_1, k = 5, control = list(seed = 1234))
+topic_true_lda <- tidy(true_lda, matrix = "beta")
+
+top_topic_true <- topic_true_lda %>%
+  group_by(topic) %>%
+  top_n(20,beta) %>%
+  ungroup() %>%
+  arrange(topic,-beta)
+
+plot_topic_true <- top_topic_true %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) + 
+  geom_col(show.legend = FALSE) + 
+  ggtitle("Terms in Real News") +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip() +
+  scale_x_reordered()
+
+plot_topic_true
+```
+
+
+Go back to word frequency
+
+
+```{r}
+true_tdm <- as.TermDocumentMatrix(true_dtm)
+true_tdm <- remove_stopwords(true_tdm, stopwords = tm::stopwords("english"), min.char = 2,
+  max.char = NULL, stem = FALSE, denumber = TRUE)
+
+true_matrix <- as.matrix(true_tdm)
+
+true_sort <- sort(rowSums(true_matrix), decreasing = TRUE)
+
+true_df <- data.frame(word = names(true_sort), freq = true_sort)
+head(true_df)
+
+true_dtm_frequency_plot <- ggplot(true_df[1:20, ], aes(x = reorder(word, -freq), y = freq, fill = word)) + geom_bar(stat = "identity") + 
+  labs(x = "Words", y = "Frequency", title = "Most Frequent Words in True News")
+
+true_dtm_frequency_plot
+```
+
+
+Ngram
+
+
+```{r}
+fake_bigrams <- fake %>%
+  unnest_tokens(bigram, cleaned_text, token = "ngrams", n = 2)
+
+head(fake_bigrams)
+```
+
+
+```{r}
+true_bigrams <- true %>%
+  unnest_tokens(bigram, cleaned_text, token = "ngrams", n = 2)
+
+head(true_bigrams)
+```
+
+
+
+```{r}
+fake_bi <- fake_bigrams %>%
+  count(bigram, sort = TRUE)
+
+fake_bi_plot <- ggplot(fake_bi[1:20, ], aes(x = reorder(bigram, -n), y = n, fill = bigram)) + geom_bar(stat = "identity") + 
+  labs(x = "Words", y = "Frequency", title = "Most Frequent Words in Fake News")+coord_flip()
+
+fake_bi_plot
+```
+
+
+```{r}
+true_bi <- true_bigrams %>%
+  count(bigram, sort = TRUE)
+
+true_bi_plot <- ggplot(true_bi[1:20, ], aes(x = reorder(bigram, -n), y = n, fill = bigram)) + geom_bar(stat = "identity") + 
+  labs(x = "Words", y = "Frequency", title = "Most Frequent Words in True News") + coord_flip()
+
+true_bi_plot
+```
+
+
+
+```{r}
+fake_bigrams_separated <- fake_bigrams %>%
+  separate(bigram, c("word1", "word2"), sep = " ")
+
+fake_bigrams_filtered <- fake_bigrams_separated %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word)
+
+# new bigram counts:
+fake_bigram_counts <- fake_bigrams_filtered %>% 
+  count(word1, word2, sort = TRUE)
+
+fake_bigram_counts
+```
+
+
+```{r}
+true_bigrams_separated <- true_bigrams %>%
+  separate(bigram, c("word1", "word2"), sep = " ")
+
+true_bigrams_filtered <- true_bigrams_separated %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word)
+
+# new bigram counts:
+true_bigram_counts <- true_bigrams_filtered %>% 
+  count(word1, word2, sort = TRUE)
+
+true_bigram_counts
+```
+
+
+```{r}
+fake_bigrams_united <- fake_bigrams_filtered %>%
+  unite(bigram, word1, word2, sep = " ")
+
+fake_bigrams_united
+```
+
+
+```{r}
+true_bigrams_united <- true_bigrams_filtered %>%
+  unite(bigram, word1, word2, sep = " ")
+
+true_bigrams_united
+```
+
+
+```{r}
+fake %>%
+  unnest_tokens(trigram, cleaned_text, token = "ngrams", n = 3) %>%
+  separate(trigram, c("word1", "word2", "word3"), sep = " ") %>%
+  filter(!word1 %in% stop_words$word,
+         !word2 %in% stop_words$word,
+         !word3 %in% stop_words$word) %>%
+  count(word1, word2, word3, sort = TRUE)
+```
+
+
+```{r}
+true %>%
+  unnest_tokens(trigram, cleaned_text, token = "ngrams", n = 3) %>%
+  separate(trigram, c("word1", "word2", "word3"), sep = " ") %>%
+  filter(!word1 %in% stop_words$word,
+         !word2 %in% stop_words$word,
+         !word3 %in% stop_words$word) %>%
+  count(word1, word2, word3, sort = TRUE)
+```
