@@ -5,9 +5,9 @@ date: '2022-07-01'
 output: word_document
 ---
 
-
 Research question - To what extent are fake and real news differ in terms of text analysis? 
 
+This project will execute text analysis processes in three main steps, which are sentiment analysis, word frequency and topic modelling.
 
 ```{r}
 fake <- read.csv("~/Documents/2021KCLsem2/Dissertation/fakenewsdata/Fake.csv")
