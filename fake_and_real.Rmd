@@ -77,25 +77,7 @@ ggarrange(fake_senti_plot, true_senti_plot,
 
 
 
-Another approach for a sentiment analysis
-
-
-```{r}
-df_ld_sentiments = get_nrc_sentiment(fake$text)
-fake$sentiment = df_ld_sentiments$positive-df_ld_sentiments$negative
-```
-
-6. Plot a histogramt of the sentiment across all the texts. What is the average sentiment across all the texts?
-
-Histogram:
-
-```{r}
-hist(fake$sentiment)
-```
-
-```{r}
-mean(fake$sentiment)
-```
+Other approaches for a sentiment analysis
 
 
 ```{r}
@@ -268,8 +250,8 @@ wordcloud(true_text_clean, min.freq = 2000, scale = c(4.5, 0.3) , random.order =
 
 
 ```{r}
-fake_dtm <- DocumentTermMatrix(fake_text_clean, control = list(stopwords = TRUE, removePunctuation = TRUE, stemming = TRUE, removeNumbers = TRUE))
-true_dtm <- DocumentTermMatrix(true_text_clean, control = list(stopwords = TRUE, removePunctuation = TRUE, stemming = TRUE, removeNumbers = TRUE))
+fake_dtm <- DocumentTermMatrix(fake_text_clean, control = list(stopwords = TRUE, removePunctuation = TRUE, stemming = FALSE, removeNumbers = TRUE))
+true_dtm <- DocumentTermMatrix(true_text_clean, control = list(stopwords = TRUE, removePunctuation = TRUE, stemming = FALSE, removeNumbers = TRUE))
 ```
 
 
@@ -363,7 +345,7 @@ dim(true_dtm)
 ```{r}
 fake_result <- ldatuning::FindTopicsNumber(
   fake_dtm,
-  topics = seq(from = 2, to = 450, by = 1),
+  topics = seq(from = 2, to = 20, by = 1),
   metrics = c("CaoJuan2009",  "Deveaud2014","Arun2010", "Griffiths2004"),
   method = "Gibbs",
   control = list(seed = 38),
@@ -395,7 +377,7 @@ Topic modelling for real news
 ```{r}
 true_result <- ldatuning::FindTopicsNumber(
   true_dtm,
-  topics = seq(from = 2, to = 450, by = 1),
+  topics = seq(from = 2, to = 20, by = 1),
   metrics = c("CaoJuan2009",  "Deveaud2014","Arun2010", "Griffiths2004"),
   method = "Gibbs",
   control = list(seed = 168),
