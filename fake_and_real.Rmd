@@ -238,20 +238,21 @@ Word frequency
 ```{r}
 set.seed(555)
 palet <- brewer.pal(8, 'Dark2')
-wordcloud(fake_text_clean, min.freq = 2000, scale = c(4.5, 0.3) , random.order = F, col = palet)
+wordcloud(fake_text_clean, min.freq = 4000, scale = c(4.5, 0.3) , random.order = F, col = palet)
 ```
 
 
 ```{r}
 set.seed(555)
 palet <- brewer.pal(8, 'Dark2')
-wordcloud(true_text_clean, min.freq = 2000, scale = c(4.5, 0.3) , random.order = F, col = palet)
+wordcloud(true_text_clean, min.freq = 4000, scale = c(4.5, 0.3) , random.order = F, col = palet)
 ```
 
 
 ```{r}
-fake_dtm <- DocumentTermMatrix(fake_text_clean, control = list(stopwords = TRUE, removePunctuation = TRUE, stemming = TRUE, removeNumbers = TRUE))
-true_dtm <- DocumentTermMatrix(true_text_clean, control = list(stopwords = TRUE, removePunctuation = TRUE, stemming = TRUE, removeNumbers = TRUE))
+fake_dtm <- DocumentTermMatrix(fake_text_clean, control = list(stopwords = TRUE, removePunctuation = TRUE, stemming = FALSE, removeNumbers = TRUE))
+
+true_dtm <- DocumentTermMatrix(true_text_clean, control = list(stopwords = TRUE, removePunctuation = TRUE, stemming = FALSE, removeNumbers = TRUE))
 ```
 
 
@@ -279,11 +280,11 @@ fake_order
 
 
 ```{r}
-findAssocs(fake_dtm, "trump",0.2)
-findAssocs(fake_dtm, 'much', 0.2)
-findAssocs(fake_dtm, 'presid', 0.2)
-findAssocs(fake_dtm, 'peopl', 0.2)
-findAssocs(fake_dtm, 'state', 0.2)
+findAssocs(fake_dtm, "trump",0.4)
+findAssocs(fake_dtm, 'much', 0.4)
+findAssocs(fake_dtm, 'presid', 0.4)
+findAssocs(fake_dtm, 'peopl', 0.4)
+findAssocs(fake_dtm, 'state', 0.4)
 ```
 
 
@@ -296,103 +297,31 @@ true_order
 
 
 ```{r}
-findAssocs(true_dtm, "trump",0.2)
-findAssocs(true_dtm, 'state', 0.2)
-findAssocs(true_dtm, 'presid', 0.2)
-findAssocs(true_dtm, 'reuter', 0.2)
-findAssocs(true_dtm, 'much', 0.2)
-```
-
-
-Turning the datasets to Document Term Matrix
-
-
-```{r}
-library(tm)
-df_ld1 = data.frame(matrix(nrow = nrow(fake), ncol = 2), stringsAsFactors = FALSE)
-colnames(df_ld1) = c("doc_id", "text")
-df_ld1$doc_id  = 1:nrow(fake)
-df_ld1$text  = fake$cleaned_text
+findAssocs(true_dtm, "trump",0.4)
+findAssocs(true_dtm, 'state', 0.4)
+findAssocs(true_dtm, 'presid', 0.4)
+findAssocs(true_dtm, 'reuter', 0.4)
+findAssocs(true_dtm, 'much', 0.4)
 ```
 
 
 ```{r}
-ld_corpus = Corpus(DataframeSource(df_ld1))
-class(ld_corpus)
+fake_tdm <- as.TermDocumentMatrix(fake_dtm)
+fake_tdm <- remove_stopwords(fake_tdm, stopwords = tm::stopwords("english"), min.char = 2,
+  max.char = NULL, stem = FALSE, denumber = TRUE)
+
+fake_matrix <- as.matrix(fake_tdm)
+
+fake_sort <- sort(rowSums(fake_matrix), decreasing = TRUE)
+
+fake_df <- data.frame(word = names(fake_sort), freq = fake_sort)
+head(fake_df)
+
+fake_dtm_frequency_plot <- ggplot(fake_df[1:20, ], aes(x = reorder(word, -freq), y = freq, fill = word)) + geom_bar(stat = "identity") + 
+  labs(x = "Words", y = "Frequency", title = "Most Frequent Words in Fake News")
+
+fake_dtm_frequency_plot
 ```
-
-
-```{r}
-fake_dtm = DocumentTermMatrix(ld_corpus, control = list(stopwords = TRUE, removePunctuation = TRUE, stemming = TRUE, removeNumbers = TRUE, bounds = list(global = c(2,Inf))))
-inspect(fake_dtm)
-dim(fake_dtm)
-```
-
-
-Frequent terms in both
-
-
-```{r}
-fake_freq_terms <- findFreqTerms(fake_dtm,100)
-fake_dtm_1 <- fake_dtm[,fake_freq_terms]
-rownum_fake <- apply(fake_dtm_1,1,sum)
-fake_dtm_1 <- fake_dtm_1[rownum_fake>0,]
-```
-
-
-```{r}
-fake_lda <- LDA(fake_dtm_1, k = 5, control = list(seed = 1234))
-topic_fake_lda <- tidy(fake_lda, matrix = "beta")
-
-top_topic_fake <- topic_fake_lda %>%
-  group_by(topic) %>%
-  top_n(20,beta) %>%
-  ungroup() %>%
-  arrange(topic,-beta)
-
-plot_topic_fake <- top_topic_fake %>%
-  mutate(term = reorder_within(term, beta, topic)) %>%
-  ggplot(aes(term, beta, fill = factor(topic))) + 
-  geom_col(show.legend = FALSE) + 
-  ggtitle("Terms in Fake News") +
-  facet_wrap(~ topic, scales = "free") +
-  coord_flip() +
-  scale_x_reordered()
-
-plot_topic_fake
-```
-
-
-```{r}
-true_freq_terms <- findFreqTerms(true_dtm,100)
-true_dtm_1 <- true_dtm[,true_freq_terms]
-rownum_true <- apply(true_dtm_1,1,sum)
-true_dtm_1 <- true_dtm_1[rownum_true>0,]
-```
-
-
-```{r}
-true_lda <- LDA(true_dtm_1, k = 5, control = list(seed = 1234))
-topic_true_lda <- tidy(true_lda, matrix = "beta")
-
-top_topic_true <- topic_true_lda %>%
-  group_by(topic) %>%
-  top_n(20,beta) %>%
-  ungroup() %>%
-  arrange(topic,-beta)
-
-plot_topic_true <- top_topic_true %>%
-  mutate(term = reorder_within(term, beta, topic)) %>%
-  ggplot(aes(term, beta, fill = factor(topic))) + 
-  geom_col(show.legend = FALSE) + 
-  ggtitle("Terms in Real News") +
-  facet_wrap(~ topic, scales = "free") +
-  coord_flip() +
-  scale_x_reordered()
-
-plot_topic_true
-```
-
 
 
 ```{r}
@@ -438,10 +367,10 @@ dim(true_dtm)
 ```{r}
 fake_result <- ldatuning::FindTopicsNumber(
   fake_dtm,
-  topics = seq(from = 2, to = 40, by = 2),
+  topics = seq(from = 2, to = 50, by = 2),
   metrics = c("CaoJuan2009",  "Deveaud2014","Arun2010", "Griffiths2004"),
   method = "Gibbs",
-  control = list(seed = 38),
+  control = list(seed = 3838),
   verbose = TRUE
 )
 ```
@@ -453,14 +382,15 @@ FindTopicsNumber_plot(fake_result)
 ```
 
 
+
 ```{r}
-fake_k_best = 2
+fake_k_best = 50
 fake_lda_best = LDA(fake_dtm, fake_k_best, control = list(verbose = 25))
 ```
 
 
 ```{r}
-data.frame(terms(fake_lda_best, 10))
+data.frame(terms(fake_lda_best, 20))
 ```
 
 
@@ -470,10 +400,10 @@ Topic modelling for real news
 ```{r}
 true_result <- ldatuning::FindTopicsNumber(
   true_dtm,
-  topics = seq(from = 2, to = 40, by = 2),
+  topics = seq(from = 2, to = 50, by = 2),
   metrics = c("CaoJuan2009",  "Deveaud2014","Arun2010", "Griffiths2004"),
   method = "Gibbs",
-  control = list(seed = 168),
+  control = list(seed = 1668),
   verbose = TRUE
 )
 ```
@@ -486,11 +416,73 @@ FindTopicsNumber_plot(true_result)
 
 
 ```{r}
-true_k_best = 2
+true_k_best = 50
 true_lda_best = LDA(true_dtm, true_k_best, control = list(verbose = 25))
 ```
 
 
 ```{r}
-data.frame(terms(true_lda_best, 10))
+data.frame(terms(true_lda_best, 20))
+```
+
+
+Frequent terms in both from LDA models
+
+```{r}
+fake_freq_terms <- findFreqTerms(fake_dtm,100)
+fake_dtm_1 <- fake_dtm[,fake_freq_terms]
+rownum_fake <- apply(fake_dtm_1,1,sum)
+fake_dtm_1 <- fake_dtm_1[rownum_fake>0,]
+```
+
+
+```{r}
+topic_fake_lda <- tidy(fake_lda_best, matrix = "beta")
+
+top_topic_fake <- topic_fake_lda %>%
+  group_by(topic) %>%
+  top_n(20,beta) %>%
+  ungroup() %>%
+  arrange(topic,-beta)
+
+plot_topic_fake <- top_topic_fake %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) + 
+  geom_col(show.legend = FALSE) + 
+  ggtitle("Terms in Fake News") +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip() +
+  scale_x_reordered()
+
+plot_topic_fake
+```
+
+
+```{r}
+true_freq_terms <- findFreqTerms(true_dtm,100)
+true_dtm_1 <- true_dtm[,true_freq_terms]
+rownum_true <- apply(true_dtm_1,1,sum)
+true_dtm_1 <- true_dtm_1[rownum_true>0,]
+```
+
+
+```{r}
+topic_true_lda <- tidy(true_lda_best, matrix = "beta")
+
+top_topic_true <- topic_true_lda %>%
+  group_by(topic) %>%
+  top_n(20,beta) %>%
+  ungroup() %>%
+  arrange(topic,-beta)
+
+plot_topic_true <- top_topic_true %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) + 
+  geom_col(show.legend = FALSE) + 
+  ggtitle("Terms in Real News") +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip() +
+  scale_x_reordered()
+
+plot_topic_true
 ```
