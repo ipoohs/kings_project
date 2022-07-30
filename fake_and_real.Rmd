@@ -35,6 +35,7 @@ library(topicmodels)
 library(tidyr)
 library(stringr)
 library(textstem)
+library(quanteda)
 ```
 
 
@@ -486,3 +487,91 @@ plot_topic_true <- top_topic_true %>%
 
 plot_topic_true
 ```
+
+
+The number of offensive words usages in both datasets
+
+
+```{r}
+url <- "https://www.cs.cmu.edu/~biglou/resources/bad-words.txt"
+offensive_words <- read.delim(url)
+head(offensive_words)
+```
+
+
+```{r}
+offensive_words<- offensive_words %>%
+  mutate(word = offensive_words$abbo) %>%
+  mutate(number = 1) %>%
+  select(-abbo)
+```
+
+
+```{r}
+fake_words = data.frame(text=fake$cleaned_text, stringsAsFactors = FALSE) %>% unnest_tokens(word, text)
+
+head(fake_words)
+```
+
+
+```{r}
+fake_compare_offense = inner_join(fake_words, offensive_words, by = "word") 
+fake_offense_freq = fake_compare_offense %>%
+  count(word) %>%
+  arrange(desc(n))
+```
+
+
+```{r}
+fake_offense_short_freq <- head(fake_offense_freq, 20)
+```
+
+
+```{r}
+ggplot(fake_offense_short_freq, aes(x= reorder(word, -n), y= n, fill = word)) + geom_col() + 
+  labs(x = "Offensive Words", y = "Frequency", title = "Most Offensive Words in Fake News")
+```
+
+
+```{r}
+true_words = data.frame(text=true$cleaned_text, stringsAsFactors = FALSE) %>% unnest_tokens(word, text)
+
+head(true_words)
+```
+
+
+```{r}
+true_compare_offense = inner_join(true_words, offensive_words, by = "word") 
+true_offense_freq = true_compare_offense %>%
+  count(word) %>%
+  arrange(desc(n))
+```
+
+
+```{r}
+true_offense_short_freq <- head(true_offense_freq, 20)
+```
+
+
+```{r}
+ggplot(true_offense_short_freq, aes(x= reorder(word, -n), y= n, fill = word)) + geom_col() + 
+  labs(x = "Offensive Words", y = "Frequency", title = "Most Offensive Words in Real News")
+```
+
+
+```{r}
+fake_readability <- textstat_readability(fake_text_clean, c("meanSentenceLength","meanWordSyllables", "Flesch.Kincaid", "Flesch"), remove_hyphens = TRUE,
+  min_sentence_length = 1, max_sentence_length = 10000,
+  intermediate = FALSE)
+head(fake_readability)
+```
+
+
+```{r}
+true_readability <- textstat_readability(fake_text_clean, c("meanSentenceLength","meanWordSyllables", "Flesch.Kincaid", "Flesch"), remove_hyphens = TRUE,
+  min_sentence_length = 1, max_sentence_length = 10000,
+  intermediate = FALSE)
+head(true_readability)
+```
+
+
