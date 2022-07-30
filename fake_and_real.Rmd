@@ -35,7 +35,7 @@ library(topicmodels)
 library(tidyr)
 library(stringr)
 library(textstem)
-library(quanteda)
+library(quanteda.textstats)
 ```
 
 
@@ -283,8 +283,8 @@ fake_order
 ```{r}
 findAssocs(fake_dtm, "trump",0.4)
 findAssocs(fake_dtm, 'much', 0.4)
-findAssocs(fake_dtm, 'presid', 0.4)
-findAssocs(fake_dtm, 'peopl', 0.4)
+findAssocs(fake_dtm, 'president', 0.4)
+findAssocs(fake_dtm, 'people', 0.4)
 findAssocs(fake_dtm, 'state', 0.4)
 ```
 
@@ -300,8 +300,8 @@ true_order
 ```{r}
 findAssocs(true_dtm, "trump",0.4)
 findAssocs(true_dtm, 'state', 0.4)
-findAssocs(true_dtm, 'presid', 0.4)
-findAssocs(true_dtm, 'reuter', 0.4)
+findAssocs(true_dtm, 'reuters', 0.4)
+findAssocs(true_dtm, 'president', 0.4)
 findAssocs(true_dtm, 'much', 0.4)
 ```
 
@@ -368,7 +368,7 @@ dim(true_dtm)
 ```{r}
 fake_result <- ldatuning::FindTopicsNumber(
   fake_dtm,
-  topics = seq(from = 2, to = 50, by = 2),
+  topics = seq(from = 2, to = 30, by = 2),
   metrics = c("CaoJuan2009",  "Deveaud2014","Arun2010", "Griffiths2004"),
   method = "Gibbs",
   control = list(seed = 3838),
@@ -385,13 +385,13 @@ FindTopicsNumber_plot(fake_result)
 
 
 ```{r}
-fake_k_best = 50
+fake_k_best = 30
 fake_lda_best = LDA(fake_dtm, fake_k_best, control = list(verbose = 25))
 ```
 
 
 ```{r}
-data.frame(terms(fake_lda_best, 20))
+data.frame(terms(fake_lda_best, 10))
 ```
 
 
@@ -401,7 +401,7 @@ Topic modelling for real news
 ```{r}
 true_result <- ldatuning::FindTopicsNumber(
   true_dtm,
-  topics = seq(from = 2, to = 50, by = 2),
+  topics = seq(from = 2, to = 30, by = 2),
   metrics = c("CaoJuan2009",  "Deveaud2014","Arun2010", "Griffiths2004"),
   method = "Gibbs",
   control = list(seed = 1668),
@@ -423,7 +423,7 @@ true_lda_best = LDA(true_dtm, true_k_best, control = list(verbose = 25))
 
 
 ```{r}
-data.frame(terms(true_lda_best, 20))
+data.frame(terms(true_lda_best, 10))
 ```
 
 
@@ -528,6 +528,12 @@ fake_offense_short_freq <- head(fake_offense_freq, 20)
 
 
 ```{r}
+dim(fake_offense_freq)
+```
+
+
+
+```{r}
 ggplot(fake_offense_short_freq, aes(x= reorder(word, -n), y= n, fill = word)) + geom_col() + 
   labs(x = "Offensive Words", y = "Frequency", title = "Most Offensive Words in Fake News")
 ```
@@ -554,24 +560,31 @@ true_offense_short_freq <- head(true_offense_freq, 20)
 
 
 ```{r}
+dim(true_offense_freq)
+```
+
+
+```{r}
 ggplot(true_offense_short_freq, aes(x= reorder(word, -n), y= n, fill = word)) + geom_col() + 
   labs(x = "Offensive Words", y = "Frequency", title = "Most Offensive Words in Real News")
 ```
 
 
 ```{r}
-fake_readability <- textstat_readability(fake_text_clean, c("meanSentenceLength","meanWordSyllables", "Flesch.Kincaid", "Flesch"), remove_hyphens = TRUE,
+fake_readability <- textstat_readability(fake$cleaned_text, c("meanSentenceLength","meanWordSyllables", "Flesch.Kincaid", "Flesch"), remove_hyphens = TRUE,
   min_sentence_length = 1, max_sentence_length = 10000,
   intermediate = FALSE)
 head(fake_readability)
+summary(fake_readability)
 ```
 
 
 ```{r}
-true_readability <- textstat_readability(fake_text_clean, c("meanSentenceLength","meanWordSyllables", "Flesch.Kincaid", "Flesch"), remove_hyphens = TRUE,
+true_readability <- textstat_readability(true$cleaned_text, c("meanSentenceLength","meanWordSyllables", "Flesch.Kincaid", "Flesch"), remove_hyphens = TRUE,
   min_sentence_length = 1, max_sentence_length = 10000,
   intermediate = FALSE)
 head(true_readability)
+summary(true_readability)
 ```
 
 
