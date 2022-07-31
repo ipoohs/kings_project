@@ -7,7 +7,10 @@ output: word_document
 
 Research question - To what extent are fake and real news differ in terms of text analysis? 
 
-This project will execute text analysis processes in three main steps, which are sentiment analysis, word frequency and topic modelling.
+This project will execute text analysis processes in two main steps, which are sentiment analysis and word frequency.
+
+The datasets utilised in this project has been retrieved from https://www.kaggle.com/datasets/clmentbisaillon/fake-and-real-news-dataset by CLÉMENT BISAILLON
+
 
 ```{r}
 fake <- read.csv("~/Documents/2021KCLsem2/Dissertation/fakenewsdata/Fake.csv")
@@ -30,8 +33,6 @@ library(ggplot2)
 library(gofastr)
 library(dplyr)
 library(tidytext)
-library(topicdoc)
-library(topicmodels)
 library(tidyr)
 library(stringr)
 library(textstem)
@@ -344,149 +345,7 @@ true_dtm_frequency_plot
 ```
 
 
-Topic modelling
 
-
-```{r}
-library(slam)
-fake_sel_idx = row_sums(fake_dtm) > 0
-sum(fake_sel_idx)
-fake_dtm = fake_dtm[fake_sel_idx, ]
-dim(fake_dtm)
-```
-
-
-```{r}
-library(slam)
-true_sel_idx = row_sums(true_dtm) > 0
-sum(true_sel_idx)
-true_dtm = true_dtm[true_sel_idx, ]
-dim(true_dtm)
-```
-
-
-```{r}
-fake_result <- ldatuning::FindTopicsNumber(
-  fake_dtm,
-  topics = seq(from = 2, to = 30, by = 2),
-  metrics = c("CaoJuan2009",  "Deveaud2014","Arun2010", "Griffiths2004"),
-  method = "Gibbs",
-  control = list(seed = 3838),
-  verbose = TRUE
-)
-```
-
-
-```{r}
-library(ldatuning)
-FindTopicsNumber_plot(fake_result)
-```
-
-
-
-```{r}
-fake_k_best = 30
-fake_lda_best = LDA(fake_dtm, fake_k_best, control = list(verbose = 25))
-```
-
-
-```{r}
-data.frame(terms(fake_lda_best, 10))
-```
-
-
-Topic modelling for real news
-
-
-```{r}
-true_result <- ldatuning::FindTopicsNumber(
-  true_dtm,
-  topics = seq(from = 2, to = 30, by = 2),
-  metrics = c("CaoJuan2009",  "Deveaud2014","Arun2010", "Griffiths2004"),
-  method = "Gibbs",
-  control = list(seed = 1668),
-  verbose = TRUE
-)
-```
-
-
-```{r}
-library(ldatuning)
-FindTopicsNumber_plot(true_result)
-```
-
-
-```{r}
-true_k_best = 50
-true_lda_best = LDA(true_dtm, true_k_best, control = list(verbose = 25))
-```
-
-
-```{r}
-data.frame(terms(true_lda_best, 10))
-```
-
-
-Frequent terms in both from LDA models
-
-```{r}
-fake_freq_terms <- findFreqTerms(fake_dtm,100)
-fake_dtm_1 <- fake_dtm[,fake_freq_terms]
-rownum_fake <- apply(fake_dtm_1,1,sum)
-fake_dtm_1 <- fake_dtm_1[rownum_fake>0,]
-```
-
-
-```{r}
-topic_fake_lda <- tidy(fake_lda_best, matrix = "beta")
-
-top_topic_fake <- topic_fake_lda %>%
-  group_by(topic) %>%
-  top_n(20,beta) %>%
-  ungroup() %>%
-  arrange(topic,-beta)
-
-plot_topic_fake <- top_topic_fake %>%
-  mutate(term = reorder_within(term, beta, topic)) %>%
-  ggplot(aes(term, beta, fill = factor(topic))) + 
-  geom_col(show.legend = FALSE) + 
-  ggtitle("Terms in Fake News") +
-  facet_wrap(~ topic, scales = "free") +
-  coord_flip() +
-  scale_x_reordered()
-
-plot_topic_fake
-```
-
-
-```{r}
-true_freq_terms <- findFreqTerms(true_dtm,100)
-true_dtm_1 <- true_dtm[,true_freq_terms]
-rownum_true <- apply(true_dtm_1,1,sum)
-true_dtm_1 <- true_dtm_1[rownum_true>0,]
-```
-
-
-```{r}
-topic_true_lda <- tidy(true_lda_best, matrix = "beta")
-
-top_topic_true <- topic_true_lda %>%
-  group_by(topic) %>%
-  top_n(20,beta) %>%
-  ungroup() %>%
-  arrange(topic,-beta)
-
-plot_topic_true <- top_topic_true %>%
-  mutate(term = reorder_within(term, beta, topic)) %>%
-  ggplot(aes(term, beta, fill = factor(topic))) + 
-  geom_col(show.legend = FALSE) + 
-  ggtitle("Terms in Real News") +
-  facet_wrap(~ topic, scales = "free") +
-  coord_flip() +
-  scale_x_reordered()
-
-plot_topic_true
-```
 
 
 The number of offensive words usages in both datasets
@@ -532,6 +391,10 @@ dim(fake_offense_freq)
 ```
 
 
+```{r}
+sum(fake_offense_freq$n)
+```
+
 
 ```{r}
 ggplot(fake_offense_short_freq, aes(x= reorder(word, -n), y= n, fill = word)) + geom_col() + 
@@ -561,6 +424,11 @@ true_offense_short_freq <- head(true_offense_freq, 20)
 
 ```{r}
 dim(true_offense_freq)
+```
+
+
+```{r}
+sum(true_offense_freq$n)
 ```
 
 
