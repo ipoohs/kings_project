@@ -37,6 +37,7 @@ library(tidyr)
 library(stringr)
 library(textstem)
 library(quanteda.textstats)
+library(stargazer)
 ```
 
 
@@ -443,7 +444,16 @@ fake_readability <- textstat_readability(fake$cleaned_text, c("meanSentenceLengt
   min_sentence_length = 1, max_sentence_length = 10000,
   intermediate = FALSE)
 head(fake_readability)
+```
+
+
+```{r}
 summary(fake_readability)
+```
+
+
+```{r}
+fake_read_score <- describe(fake_readability)
 ```
 
 
@@ -452,7 +462,34 @@ true_readability <- textstat_readability(true$cleaned_text, c("meanSentenceLengt
   min_sentence_length = 1, max_sentence_length = 10000,
   intermediate = FALSE)
 head(true_readability)
+```
+
+
+```{r}
 summary(true_readability)
+```
+
+
+```{r}
+true_read_score <- describe(true_readability)
+```
+
+
+```{r}
+fake2 <- t(fake_read_score)
+true2 <- t(true_read_score)
+```
+
+
+```{r}
+fake2 <- data.frame(fake2, row.names = rownames(fake2))
+true2 <- data.frame(true2, row.names = rownames(true2))
+```
+
+
+```{r}
+write_xlsx(fake2, "~/Documents/2021KCLsem2/Dissertation/kings_project/fake")
+write_xlsx(true2, "~/Documents/2021KCLsem2/Dissertation/kings_project/true")
 ```
 
 
