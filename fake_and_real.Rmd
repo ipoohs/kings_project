@@ -23,6 +23,7 @@ library(syuzhet)
 library(textdata)
 library(tidytext)
 library(dplyr)
+library(writexl)
 library(ggplot2)
 library(ggpubr)
 library(NLP)
@@ -37,7 +38,7 @@ library(tidyr)
 library(stringr)
 library(textstem)
 library(quanteda.textstats)
-library(stargazer)
+library(psych)
 ```
 
 
