@@ -23,6 +23,8 @@ library(syuzhet)
 library(textdata)
 library(tidytext)
 library(dplyr)
+library(qdapTools)
+library(ggthemes)
 library(writexl)
 library(ggplot2)
 library(ggpubr)
@@ -284,29 +286,100 @@ fake_order
 
 
 ```{r}
-findAssocs(fake_dtm, "trump",0.4)
-findAssocs(fake_dtm, 'much', 0.4)
-findAssocs(fake_dtm, 'president', 0.4)
-findAssocs(fake_dtm, 'people', 0.4)
-findAssocs(fake_dtm, 'state', 0.4)
+fake_asso <- findAssocs(fake_dtm, 'trump',0.3)
+fake_asso2 <- findAssocs(fake_dtm, 'much', 0.3)
+fake_asso3 <- findAssocs(fake_dtm, 'president', 0.3)
+fake_asso4 <- findAssocs(fake_dtm, 'people', 0.3)
+fake_asso5 <- findAssocs(fake_dtm, 'state', 0.3)
 ```
+
+
+```{r}
+fake_associations_df <- list_vect2df(fake_asso, col2 = "word", col3 = "score")
+fake_asso_graph1 <- ggplot(fake_associations_df, aes(score, word)) + 
+  geom_point(size = 3, color = 'red') + 
+  theme_gdocs()
+
+fake_associations_df2 <- list_vect2df(fake_asso2, col2 = "word", col3 = "score")
+fake_asso_graph2 <- ggplot(fake_associations_df2, aes(score, word)) + 
+  geom_point(size = 3, color = 'red') + 
+  theme_gdocs()
+
+fake_associations_df3 <- list_vect2df(fake_asso3, col2 = "word", col3 = "score")
+fake_asso_graph3 <- ggplot(fake_associations_df3, aes(score, word)) + 
+  geom_point(size = 3, color = 'red') + 
+  theme_gdocs()
+
+fake_associations_df4 <- list_vect2df(fake_asso4, col2 = "word", col3 = "score")
+fake_asso_graph4 <- ggplot(fake_associations_df4, aes(score, word)) + 
+  geom_point(size = 3, color = 'red') + 
+  theme_gdocs()
+
+fake_associations_df5 <- list_vect2df(fake_asso5, col2 = "word", col3 = "score")
+fake_asso_graph5 <- ggplot(fake_associations_df5, aes(score, word)) + 
+  geom_point(size = 3, color = 'red') + 
+  theme_gdocs()
+
+ggarrange(fake_asso_graph1, fake_asso_graph2, labels =c("trump's associations", "much's associations"))
+```
+
+
+```{r}
+ggarrange(fake_asso_graph3, 
+          fake_asso_graph4, fake_asso_graph5,
+          labels = c("president's associations", "people's associations", "state's associations"))
+```
+
 
 
 ```{r}
 true_dtm_order <- order(true_dtm_frequency, decreasing = TRUE)
 true_order <- true_dtm_frequency[head(true_dtm_order, n = 20)]
 true_order
-
 ```
 
 
 ```{r}
-findAssocs(true_dtm, "trump",0.4)
-findAssocs(true_dtm, 'state', 0.4)
-findAssocs(true_dtm, 'reuters', 0.4)
-findAssocs(true_dtm, 'president', 0.4)
-findAssocs(true_dtm, 'much', 0.4)
+true_asso <- findAssocs(true_dtm, 'trump',0.3)
+true_asso2 <- findAssocs(true_dtm, 'state', 0.3)
+true_asso3 <- findAssocs(true_dtm, 'reuters', 0.3)
+true_asso4 <- findAssocs(true_dtm, 'president', 0.3)
+true_asso5 <- findAssocs(true_dtm, 'much', 0.3)
 ```
+
+
+```{r}
+true_associations_df <- list_vect2df(true_asso, col2 = "word", col3 = "score")
+true_asso_graph1 <- ggplot(true_associations_df, aes(score, word)) + 
+  geom_point(size = 3, color = 'darkblue') + 
+  theme_gdocs()
+
+true_associations_df2 <- list_vect2df(true_asso2, col2 = "word", col3 = "score")
+true_asso_graph2 <- ggplot(true_associations_df2, aes(score, word)) + 
+  geom_point(size = 3, color = 'darkblue') + 
+  theme_gdocs()
+
+true_associations_df3 <- list_vect2df(true_asso3, col2 = "word", col3 = "score")
+true_asso_graph3 <- ggplot(true_associations_df3, aes(score, word)) + 
+  geom_point(size = 3, color = 'darkblue') + 
+  theme_gdocs()
+
+true_associations_df4 <- list_vect2df(true_asso4, col2 = "word", col3 = "score")
+true_asso_graph4 <- ggplot(true_associations_df4, aes(score, word)) + 
+  geom_point(size = 3, color = 'darkblue') + 
+  theme_gdocs()
+
+true_associations_df5 <- list_vect2df(true_asso5, col2 = "word", col3 = "score")
+true_asso_graph5 <- ggplot(true_associations_df5, aes(score, word)) + 
+  geom_point(size = 3, color = 'darkblue') + 
+  theme_gdocs()
+
+ggarrange(true_asso_graph1, true_asso_graph2, true_asso_graph3, 
+          true_asso_graph4, true_asso_graph5,
+          labels = c("trump's associations", "state's associations", "Reuters' associations", "president's associations", "much's associations"),
+          ncol = 2, nrow = 3)
+```
+
 
 
 ```{r}
