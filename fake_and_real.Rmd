@@ -441,7 +441,7 @@ ggplot(true_offense_short_freq, aes(x= reorder(word, -n), y= n, fill = word)) + 
 
 
 ```{r}
-fake_readability <- textstat_readability(fake$cleaned_text, c("meanSentenceLength","meanWordSyllables", "Flesch.Kincaid", "Flesch"), remove_hyphens = TRUE,
+fake_readability <- textstat_readability(fake$text, c("meanSentenceLength","meanWordSyllables", "Flesch.Kincaid", "Flesch", "Dale.Chall", "FOG"), remove_hyphens = TRUE,
   min_sentence_length = 1, max_sentence_length = 10000,
   intermediate = FALSE)
 head(fake_readability)
@@ -459,7 +459,7 @@ fake_read_score <- describe(fake_readability)
 
 
 ```{r}
-true_readability <- textstat_readability(true$cleaned_text, c("meanSentenceLength","meanWordSyllables", "Flesch.Kincaid", "Flesch"), remove_hyphens = TRUE,
+true_readability <- textstat_readability(true$text, c("meanSentenceLength","meanWordSyllables", "Flesch.Kincaid", "Flesch", "Dale.Chall", "FOG"), remove_hyphens = TRUE,
   min_sentence_length = 1, max_sentence_length = 10000,
   intermediate = FALSE)
 head(true_readability)
