@@ -477,8 +477,8 @@ true_read_score <- describe(true_readability)
 
 
 ```{r}
-fake2 <- t(fake_read_score)
-true2 <- t(true_read_score)
+fake2 <- t(round((fake_read_score),2))
+true2 <- t(round((true_read_score),2))
 ```
 
 
@@ -489,8 +489,8 @@ true2 <- data.frame(true2, row.names = rownames(true2))
 
 
 ```{r}
-write_xlsx(fake2, "~/Documents/2021KCLsem2/Dissertation/kings_project/fake")
-write_xlsx(true2, "~/Documents/2021KCLsem2/Dissertation/kings_project/true")
+write_xlsx(fake2, "~/Documents/2021KCLsem2/Dissertation/kings_project/fake.xlsx")
+write_xlsx(true2, "~/Documents/2021KCLsem2/Dissertation/kings_project/true.xlsx")
 ```
 
 
